@@ -1,7 +1,7 @@
 {
   "name": "Vibe Fearless",
   "description": "🎧 Vibe Fearless — Free Telegram VC music bot that runs on Render, Koyeb, Railway & Heroku easily!",
-  "repository": "https://github.com/fearlessxtunnel-web/VibeFearless_Robot",
+  "repository": "https://github.com/fearlessxtunnel-web/VibeFearless_PrimeRobot",
   "logo": "https://imgtree.co/i/S9ZNRrt4",
   "keywords": ["telegram", "music", "bot", "vc", "python"],
   "stack": "container",
