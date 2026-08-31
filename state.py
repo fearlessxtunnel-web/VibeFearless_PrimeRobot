@@ -7,4 +7,4 @@ paused_chats = set()
 user_command_history = {}
 bot_start_time = time.time()
 ASSISTANT_ID =8547061213
-ASSISTANT_USERNAME =FEARLESS_ASSISTANT
+ASSISTANT_USERNAME =@FEARLESS_ASSISTANT
