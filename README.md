@@ -46,7 +46,7 @@
 ## 📁 Project Structure
 
 ```
-VibeFearless_Robot/
+VibeFearless_PrimeRobot/
 ├── main.py              ← Entry point, starts all services
 ├── config.py            ← All environment variables
 ├── state.py             ← In-memory state (queues, clients)
