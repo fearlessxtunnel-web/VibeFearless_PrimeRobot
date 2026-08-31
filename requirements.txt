@@ -1,0 +1,10 @@
+kurigram
+py-tgcalls
+aiohttp
+tgcrypto
+isodate
+pillow
+psutil
+python-dotenv
+aiofiles
+yt-dlp

@@ -1,0 +1,21 @@
+services:
+  - name: vibe-fearless-primerobot
+    git:
+      repo: "https://github.com/fearlessxtunnel-web/VibeFearless_PrimeRobot"
+      branch: main
+    dockerfile_path: Dockerfile
+    routes:
+      - name: web
+        path: "/"
+    ports:
+      - 8080
+    instance_type: micro
+    env:
+      API_ID: ""
+      API_HASH: ""
+      BOT_TOKEN: ""
+      ASSISTANT_SESSION: ""
+      OWNER_ID: ""
+      SEARCH_API_URL: ""
+      DOWNLOAD_API_BASE: ""
+      YOUTUBE_COOKIES: ""
