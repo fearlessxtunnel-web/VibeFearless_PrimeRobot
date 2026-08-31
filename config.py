@@ -2,10 +2,10 @@ import os
 
 API_ID = int(os.getenv("API_ID", "35450953"))
 API_HASH = os.getenv("API_HASH", "763f72b8b828a1907a9291ef02a25dfb")
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8858467277:AAG45_eTewwo2RfUhiLAotLHLfKoWXplFsI")
 SESSION_STRING = os.getenv("ASSISTANT_SESSION", "BQIc8EkAbjNHvv-G6P4jzgATCqgXnk0AFJFTilrddnIuH6Yu0OISKg0o8DqTKORYiMEcAofJpdy4jegDfvg4oCS7S3hghKYhd0sz2rPf0rwqxmBZM85GesFtAgILQ_y_L1dNqhij3eLQEwccSL9f-08JyJ_-wIKheAkceJby5mDQm7_xyKZvqRKBkYx8_hfDQJKdFQy2AD_1yLDoVSt3d143KTzNVnhz-Ix6hciA753qroKLkbI6ooXzFQSG_khFGBL43-XPJ2-ydNoNHGb377HPUZTZKpIPNdSmsAolZHd55O_sGB67BeVh0azpNuWWQTVzeM2BOiz3TlTbNkoU6IIm4xpSywAAAAIMk5h6AQ") or os.getenv("STRING_SESSION" , "BQIc8EkAbjNHvv-G6P4jzgATCqgXnk0AFJFTilrddnIuH6Yu0OISKg0o8DqTKORYiMEcAofJpdy4jegDfvg4oCS7S3hghKYhd0sz2rPf0rwqxmBZM85GesFtAgILQ_y_L1dNqhij3eLQEwccSL9f-08JyJ_-wIKheAkceJby5mDQm7_xyKZvqRKBkYx8_hfDQJKdFQy2AD_1yLDoVSt3d143KTzNVnhz-Ix6hciA753qroKLkbI6ooXzFQSG_khFGBL43-XPJ2-ydNoNHGb377HPUZTZKpIPNdSmsAolZHd55O_sGB67BeVh0azpNuWWQTVzeM2BOiz3TlTbNkoU6IIm4xpSywAAAAIMk5h6AQ")
-MAIN_OWNER = int(os.getenv("OWNER_ID", "8673494392"))
-DEPLOYED_OWNER_ID = int(os.getenv("OWNER_ID", "8673494392"))
+MAIN_OWNER = int(os.getenv("OWNER_ID", "7915543522"))
+DEPLOYED_OWNER_ID = int(os.getenv("OWNER_ID", "7915543522"))
 SEARCH_API_URL = os.getenv("SEARCH_API_URL", "https://search-api.kustbotsweb.workers.dev")
 DOWNLOAD_API_BASE = os.getenv("DOWNLOAD_API_BASE", "").rstrip("/")
 COOKIES_FILE = os.getenv("COOKIES_FILE", "cookies.txt")
