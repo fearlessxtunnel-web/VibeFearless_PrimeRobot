@@ -7,107 +7,140 @@ import urllib.parse
 import aiohttp
 import yt_dlp
 
-from config import COOKIES_FILE, DOWNLOAD_API_BASE, SEARCH_API_URL
+from config import COOKIES_FILE, SEARCH_API_URL
 
 logger = logging.getLogger(__name__)
 
+DOWNLOAD_DIR = "downloads"
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+
 
 async def fetch_youtube_link(query):
+    """Search YouTube using the configured search API."""
     try:
         async with aiohttp.ClientSession() as session:
             url = f"{SEARCH_API_URL}/search?q={urllib.parse.quote(query)}"
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    if isinstance(data, dict):
-                        return data
-                    if isinstance(data, list) and data:
-                        return data[0]
-        return None
-    except Exception:
-        return None
 
+            async with session.get(
+                url,
+                timeout=aiohttp.ClientTimeout(total=15)
+            ) as response:
 
-async def _download_via_api(youtube_url):
-    try:
-        unique = str(time.time())
-        final_path = f"downloads/{unique}.mp3"
-        endpoint = f"{DOWNLOAD_API_BASE}/download?url={urllib.parse.quote(youtube_url)}"
-        async with aiohttp.ClientSession() as session:
-            async with session.get(endpoint, timeout=aiohttp.ClientTimeout(total=60)) as resp:
-                if resp.status != 200:
+                if response.status != 200:
+                    logger.warning(
+                        f"Search API returned HTTP {response.status}"
+                    )
                     return None
-                content_type = resp.headers.get("Content-Type", "")
-                if "application/json" in content_type:
-                    data = await resp.json()
-                    direct_url = data.get("url") or data.get("link") or data.get("download_url")
-                    if not direct_url:
-                        return None
-                    async with session.get(direct_url, timeout=aiohttp.ClientTimeout(total=120)) as audio_resp:
-                        if audio_resp.status != 200:
-                            return None
-                        with open(final_path, "wb") as f:
-                            async for chunk in audio_resp.content.iter_chunked(65536):
-                                f.write(chunk)
-                else:
-                    with open(final_path, "wb") as f:
-                        async for chunk in resp.content.iter_chunked(65536):
-                            f.write(chunk)
-        if os.path.exists(final_path) and os.path.getsize(final_path) > 0:
-            return final_path
+
+                data = await response.json()
+
+                if isinstance(data, dict):
+                    return data
+
+                if isinstance(data, list) and data:
+                    return data[0]
+
         return None
+
     except Exception as e:
-        logger.warning(f"Download API failed: {e}")
+        logger.warning(f"YouTube search failed: {e}")
         return None
 
 
 def _yt_download(youtube_url, output_template):
+    """
+    Download audio only with yt-dlp.
+    No video format is downloaded.
+    """
+
     ydl_opts = {
-        "format": "bestaudio/best",
+        # Audio only
+        "format": "bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio",
+
         "outtmpl": output_template,
-        "postprocessors": [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "192",
-        }],
-        "quiet": True,
-        "no_warnings": True,
+
+        # Keep original audio instead of downloading a video
         "noplaylist": True,
+
+        # Faster / cleaner output
+        "quiet": True,
+        "no_warnings": False,
+
+        # Don't hang forever
+        "socket_timeout": 30,
+        "retries": 3,
+        "fragment_retries": 3,
+
+        # Avoid unnecessary playlist processing
+        "extract_flat": False,
+
+        # Extractor clients
         "extractor_args": {
             "youtube": {
-                "player_client": ["web", "mweb", "android"],
+                "player_client": ["android", "web", "mweb"],
             }
         },
     }
-    if COOKIES_FILE and os.path.exists(COOKIES_FILE):
+
+    # Use cookies only when the configured file actually exists.
+    if COOKIES_FILE and os.path.isfile(COOKIES_FILE):
         ydl_opts["cookiefile"] = COOKIES_FILE
+
+    logger.info(f"Starting yt-dlp audio download: {youtube_url}")
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([youtube_url])
 
 
 async def _download_via_ytdlp(youtube_url):
+    """Run yt-dlp outside the asyncio event loop."""
+
+    unique = str(int(time.time() * 1000))
+    output_template = os.path.join(
+        DOWNLOAD_DIR,
+        f"{unique}.%(ext)s"
+    )
+
     try:
-        unique = str(time.time())
-        output_template = f"downloads/{unique}.%(ext)s"
-        final_path = f"downloads/{unique}.mp3"
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, _yt_download, youtube_url, output_template)
-        if os.path.exists(final_path):
-            return final_path
-        for ext in ["m4a", "webm", "opus", "ogg"]:
-            alt = f"downloads/{unique}.{ext}"
-            if os.path.exists(alt):
-                return alt
+        loop = asyncio.get_running_loop()
+
+        await loop.run_in_executor(
+            None,
+            _yt_download,
+            youtube_url,
+            output_template
+        )
+
+        # Find the file produced by yt-dlp.
+        base = os.path.join(DOWNLOAD_DIR, unique)
+
+        for ext in ("m4a", "webm", "opus", "ogg", "mp3"):
+            path = f"{base}.{ext}"
+
+            if os.path.isfile(path) and os.path.getsize(path) > 0:
+                logger.info(
+                    f"Audio downloaded successfully: {path}"
+                )
+                return path
+
+        logger.warning("yt-dlp finished but no audio file was found.")
         return None
+
     except Exception as e:
         logger.warning(f"yt-dlp failed: {e}")
         return None
 
 
 async def download_song(youtube_url):
-    if DOWNLOAD_API_BASE:
-        result = await _download_via_api(youtube_url)
-        if result:
-            return result
-        logger.info("Download API failed, falling back to yt-dlp")
+    """
+    Main downloader used by playback.py.
+
+    Returns:
+        Local audio file path, or None on failure.
+    """
+
+    if not youtube_url:
+        logger.warning("No YouTube URL supplied.")
+        return None
+
     return await _download_via_ytdlp(youtube_url)
